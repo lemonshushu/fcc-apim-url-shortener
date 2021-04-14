@@ -57,7 +57,11 @@ app.get('/api/hello', function(req, res) {
 
 app.post('/api/shorturl/new', (req, res) => {
   const originalUrl = req.body.url;
-  const urlObj = new URL(originalUrl);
+  try {
+    const urlObj = new URL(originalUrl);
+  } catch {
+    res.json({error: 'invalid url'});
+  }
   dns.lookup(urlObj.hostname, (err) => {
     if (err) res.json({error: 'invalid url'});
     saveShortUrl(originalUrl, (err, savedUrl) => {
