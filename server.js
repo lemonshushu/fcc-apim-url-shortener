@@ -8,32 +8,38 @@ const morgan = require('morgan');
 mongoose.connect(process.env.DB_URI, {useNewUrlParser: true, useUnifiedTopology: true});
 
 const shortUrlSchema = new mongoose.Schema({
-  url: String
+  short_url: Number,
+  original_url: String
 });
 
 let ShortUrl = mongoose.model('ShortUrl', shortUrlSchema);
 
 const saveShortUrl = (url, done) => {
-  const idx = ShortUrl.count() + 1;
-  const shortUrl = new ShortUrl({
-    short_url: idx,
-    original_url: url
-  });
-  shortUrl.save((err, savedUrl) => {
-    if (err) return console.error(err);
-    done(null, savedUrl);
+  ShortUrl.count({}, (err, cnt) => {
+    const shortUrl = new ShortUrl({
+      short_url: cnt + 1,
+      original_url: url
+    });
+    shortUrl.save((err, savedUrl) => {
+      if (err) console.error(err);
+      done(null, savedUrl);
+    });
   });
 }
 
 const findUrlByIndex = (idx, done) => {
-  return ShortUrl.find({short_url: idx}, (err, data) => {
-    if (err) return console.log(err);
+  ShortUrl.findOne({short_url: Number(idx)}, (err, data) => {
+    if (err) console.log(err);
+    if (!data) done('Invalid URL!', {});
     done(null, data)
   });
 }
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}));
 
 app.use(cors());
 
@@ -51,8 +57,7 @@ app.get('/api/hello', function(req, res) {
 });
 
 
-app.post('/api/shorturl/new', (req, res, next) => {
-  console.log(req);
+app.post('/api/shorturl/new', (req, res) => {
   const originalUrl = req.body.url;
   try {
     new URL(originalUrl);
