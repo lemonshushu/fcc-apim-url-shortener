@@ -4,7 +4,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const app = express();
 const bodyParser = require('body-parser');
-const morgan = require('morgan');
+const dns = require('dns');
 mongoose.connect(process.env.DB_URI, {useNewUrlParser: true, useUnifiedTopology: true});
 
 const shortUrlSchema = new mongoose.Schema({
@@ -45,8 +45,6 @@ app.use(cors());
 
 app.use('/public', express.static(`${process.cwd()}/public`));
 
-app.use(morgan('dev'));
-
 app.get('/', function(req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
@@ -59,14 +57,13 @@ app.get('/api/hello', function(req, res) {
 
 app.post('/api/shorturl/new', (req, res) => {
   const originalUrl = req.body.url;
-  try {
-    new URL(originalUrl);
-  } catch {
-    res.json({error: 'invalid url'});
-  }
-  saveShortUrl(originalUrl, (err, savedUrl) => {
-    if (err) return console.error(err);
-    res.json(savedUrl);
+  const urlObj = new URL(originalUrl);
+  dns.lookup(urlObj.hostname, (err) => {
+    if (err) res.json({error: 'invalid url'});
+    saveShortUrl(originalUrl, (err, savedUrl) => {
+      if (err) return console.error(err);
+      res.json(savedUrl);
+    });
   });
 });
 
