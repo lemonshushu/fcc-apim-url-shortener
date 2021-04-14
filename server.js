@@ -60,6 +60,7 @@ app.post('/api/shorturl/new', (req, res) => {
   let urlObj;
   try {
     urlObj = new URL(originalUrl);
+    if (!originalUrl.startsWith('http://') && !originalUrl.startsWith('https://')) throw 'Not http!';
   } catch {
     res.json({error: 'invalid url'});
   }
