@@ -57,8 +57,9 @@ app.get('/api/hello', function(req, res) {
 
 app.post('/api/shorturl/new', (req, res) => {
   const originalUrl = req.body.url;
+  let urlObj;
   try {
-    const urlObj = new URL(originalUrl);
+    urlObj = new URL(originalUrl);
   } catch {
     res.json({error: 'invalid url'});
   }
